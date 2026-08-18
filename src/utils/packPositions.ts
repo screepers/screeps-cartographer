@@ -1,4 +1,4 @@
-import { fastRoomPosition, sameRoomPosition } from 'lib/Movement/roomPositions';
+import { fastRoomPosition } from 'lib/Movement/roomPositions';
 import { Codec } from 'screeps-utf15';
 
 declare global {
@@ -144,81 +144,6 @@ export const getRangeTo = (from: RoomPosition, to: RoomPosition) => {
   let toGlobal = globalPosition(to);
 
   return Math.max(Math.abs(fromGlobal.x - toGlobal.x), Math.abs(fromGlobal.y - toGlobal.y));
-};
-
-export function posAtDirection(origin: RoomPosition, direction: DirectionConstant) {
-  const offset = [
-    { x: 0, y: -1 },
-    { x: 1, y: -1 },
-    { x: 1, y: 0 },
-    { x: 1, y: 1 },
-    { x: 0, y: 1 },
-    { x: -1, y: 1 },
-    { x: -1, y: 0 },
-    { x: -1, y: -1 }
-  ][direction - 1];
-
-  let newX = origin.x + offset.x;
-  let newY = origin.y + offset.y;
-  let newRoomName = origin.roomName;
-  if (newX < 0) {
-    // out of the room to the left
-    const { wx, wy } = roomNameToCoords(origin.roomName);
-    newRoomName = roomNameFromCoords(wx - 1, wy);
-    newX = 49;
-  } else if (newX > 49) {
-    // out of the room to the right
-    const { wx, wy } = roomNameToCoords(origin.roomName);
-    newRoomName = roomNameFromCoords(wx + 1, wy);
-    newX = 0;
-  } else if (newY < 0) {
-    // out of the room to the top
-    const { wx, wy } = roomNameToCoords(origin.roomName);
-    newRoomName = roomNameFromCoords(wx, wy - 1);
-    newY = 49;
-  } else if (newY > 49) {
-    // out of the room to the top
-    const { wx, wy } = roomNameToCoords(origin.roomName);
-    newRoomName = roomNameFromCoords(wx, wy + 1);
-    newY = 0;
-  }
-
-  if (newRoomName === origin.roomName) {
-    return sameRoomPosition(origin, newX, newY);
-  }
-  return fastRoomPosition(newX, newY, newRoomName);
-}
-
-/**
- * Compress a path of adjacent RoomPositions to an origin and a list of directions
- */
-export const compressPath = (path: RoomPosition[]) => {
-  const directions = [];
-  const origin = path[0];
-  if (!origin) return '';
-  let previous = origin;
-  for (const next of path.slice(1)) {
-    if (getRangeTo(previous, next) !== 1) {
-      throw new Error('Cannot compress path unless each RoomPosition is adjacent to the previous one');
-    }
-    directions.push(previous.getDirectionTo(next));
-    previous = next;
-  }
-  return packPos(origin) + directionsCodec.encode(directions);
-};
-
-/**
- * Decompress a path from an origin and list of directions
- */
-export const decompressPath = (str: string) => {
-  let previous = unpackPos(str.slice(0, 2));
-  const path = [previous];
-  const directions = directionsCodec.decode(str.slice(2)) as DirectionConstant[];
-  for (const d of directions) {
-    previous = posAtDirection(previous, d);
-    path.push(previous);
-  }
-  return path;
 };
 
 /**
