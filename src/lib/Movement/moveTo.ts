@@ -27,6 +27,7 @@ declare global {
     _cmvp?: string;
     _cmvt?: string;
   }
+
   interface PowerCreepMemory {
     _cmvp?: string;
     _cmvt?: string;
@@ -99,7 +100,8 @@ export const moveTo = (
 
   let needToFlee = false;
   let cachedTargets = cache.with(MoveTargetListSerializer).get(creepKey(creep, keys.CACHED_PATH_TARGETS));
-  for (const { pos, range } of normalizedTargets) {
+  for (let i = 0; i < normalizedTargets.length; i++) {
+    const { pos, range } = normalizedTargets[i];
     // check if movement is complete
     if (!needToFlee && pos.inRangeTo(creep.pos, range) && creep.pos.roomName === pos.roomName) {
       if (!opts?.flee) {
@@ -122,8 +124,9 @@ export const moveTo = (
         needToFlee = true; // need to move, still in range of flee targets
       }
     }
-    // check if cached targets are the same
-    if (cachedTargets && !cachedTargets.some(t => t && pos.isEqualTo(t.pos) && range === t.range)) {
+    // check if cached targets are the same, there is no reason why the order should change
+    const ct = cachedTargets?.[i];
+    if (!ct || !ct.pos.isEqualTo(pos) || ct.range !== range) {
       // cached path had different targets
       clearCachedPath(creep, cache);
       cachedTargets = undefined;
