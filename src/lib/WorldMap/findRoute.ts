@@ -28,7 +28,7 @@ export function findRoute(
       if (isSourceKeeperRoom(roomName)) return actualOpts.sourceKeeperRoomCost;
       return actualOpts.defaultRoomCost;
     }
-  );
+  ) as (roomName: string, fromRoomName: string) => number;
 
   // Generate base route, taking portals into account
   const generatedRoutes = findRouteWithPortals(
@@ -57,7 +57,7 @@ export function findRoute(
  */
 function enhanceRoute(
   route: { exit?: ExitConstant; room: string }[],
-  memoizedRouteCallback: (room: string, fromRoom: string) => number | undefined,
+  memoizedRouteCallback: (room: string, fromRoom: string) => number,
   actualOpts: MoveOpts
 ) {
   let rooms = new Set(route.map(({ room }) => room));
@@ -77,7 +77,8 @@ function enhanceRoute(
       if (
         detour &&
         Game.map.findExit(detour, route[i + 1].room) > 0 &&
-        memoizedRouteCallback(detour, route[i].room) !== Infinity
+        // Ignore the detour if it the alternative route cost is higher than the original
+        memoizedRouteCallback(detour, route[i].room) <= memoizedRouteCallback(route[i + 1].room, route[i].room)
       ) {
         // detour room is connected
         rooms.add(detour);
@@ -90,7 +91,8 @@ function enhanceRoute(
       (route[i].exit === route[i + 1].exit || !route[i + 1].exit) &&
       (!route[i + 2]?.exit || route[i].exit === route[i + 2].exit)
     ) {
-      if (rooms.size >= actualOpts.maxRooms! - 1) continue; // detour will take two rooms, ignore
+      // Ignore possible detour if the 2 extra rooms would cause the maxRooms limit to be exceeded
+      if (rooms.size >= actualOpts.maxRooms! - 1) continue;
       // Straight line for the next three rooms (or until route ends)
       // Check if there are exit tiles on both halves of the border
       const regions = exitTileRegions(route[i].room, route[i].exit!);
@@ -117,8 +119,9 @@ function enhanceRoute(
         detour1 &&
         detour2 &&
         Game.map.findExit(detour1, detour2) > 0 &&
-        memoizedRouteCallback(detour1, route[i].room) !== Infinity &&
-        memoizedRouteCallback(detour2, route[i + 1].room) !== Infinity
+        // Ignore the detour if it the alternative route cost is higher than the original
+        (memoizedRouteCallback(detour1, route[i].room) + memoizedRouteCallback(route[i + 1].room, detour2) <=
+          memoizedRouteCallback(route[i + 1].room, route[i].room) + memoizedRouteCallback(route[i + 2].room, route[i + 1].room))
       ) {
         // detour rooms are connected
         rooms.add(detour1);
