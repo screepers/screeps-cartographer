@@ -10,13 +10,14 @@ export const config = {
     roadCost: 1,
     plainCost: 2,
     swampCost: 10,
+    shoveCostLimit: 255,
     priority: 1,
     defaultRoomCost: 2,
     highwayRoomCost: 1,
     sourceKeeperRoomCost: 2,
     maxRooms: 64,
     maxOps: 100000,
-    maxOpsPerRoom: 2000
+    maxOpsPerRoom: 2000,
   } as MoveOpts,
   DEFAULT_VISUALIZE_OPTS: {
     fill: 'transparent',

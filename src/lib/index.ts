@@ -51,6 +51,19 @@ export interface MoveOpts extends PathFinderOpts {
    */
   swampCost?: number;
   /**
+   * When calling {@link moveTo} on a creep that is already within range
+   * of a target, it will prefer to stay in place, but it will also accept
+   * any adjacent position within range of a target as long as the cost
+   * for that position is less than this threshold.
+   *
+   * This option is ignored if {@link roomCallback} is undefined or
+   * does not return a cost matrix for the current room.
+   *
+   * This value should always be less than or equal to 255. At 255, any walkable
+   * adjacent position is considered viable. The default is 255.
+   */
+  shoveCostLimit?: number;
+  /**
    * Movement priority (higher-value moves override lower-value moves). The default is 1.
    */
   priority?: number;
